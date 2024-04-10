@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Search</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Job Search</h1>
+  <form id="job-search-form">
+    <label for="position">Position:</label>
+    <input type="text" id="position" name="position" required>
+    <button type="submit">Search</button>
+  </form>
+  <div id="results"></div>
+  <table id="results-table">
+    <thead>
+      <tr>
+        <th>Engine</th>
+        <th>Title</th>
+        <th>Location</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody id="results-tbody"></tbody>
+  </table>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const form = document.querySelector('#job-search-form');
+      const resultsDiv = document.querySelector('#results');
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const position = event.target.elements.position.value;
+        const url = '/search/' + encodeURIComponent(position);
+
+        try {
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error('Response error: ' + response.status);
+          }
+          const html = await response.text();
+          const data = JSON.parse(html);
+          const results = data.results;
+
+          const tbody = document.querySelector('#results-tbody');
+          if (!tbody) {
+            throw new Error('tbody element not found');
+          }
+          tbody.innerHTML = '';
+          for (const result of results) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td>${result.engine}</td>
+              <td>${result.title}</td>
+              <td>${result.location}</td>
+              <td><a href="${result.link}" target="_blank">${result.link}</a></td>
+            `;
+            tbody.appendChild(row);
+          }
+        } catch (error) {
+          resultsDiv.innerHTML = '<p>Error: ' + error.message + '</p>';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
